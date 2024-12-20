@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/package",
+  "name": "builtbylane.com",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "bun": ">=1.1.30",
+    "npm": "Only use Bun (https://bun.sh)",
+    "yarn": "Only use Bun (https://bun.sh)",
+    "pnpm": "Only use Bun (https://bun.sh)"
+  },
+  "scripts": {
+    "dev": "bunx --bun vite",
+    "build": "bunx tsc && bunx --bun vite build --minify  --outDir dist",
+    "clean": "rm -rf dist",
+    "lint": "bunx --bun eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "bunx --bun vite preview",
+    "s3:assets": "s3-deploy './dist/**/*!(*.html)' --cwd './dist/' --profile bbl --bucket builtbylane.com --gzip xml,html,htm,js,css,ttf,otf,svg,txt",
+    "s3:html": "s3-deploy './dist/**/*.html' --cwd './dist/' --profile bbl --bucket builtbylane.com --gzip html",
+    "deploy": "bun run clean && bun run build && bun run s3:assets && bun run s3:html"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react-swc": "^3.7.2",
+    "autoprefixer": "^10.4.20",
+    "s3-deploy": "^1.4.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "vite": "^4.5.5"
+  }
+}
