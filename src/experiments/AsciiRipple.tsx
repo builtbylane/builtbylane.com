@@ -149,6 +149,13 @@ const AsciiRipple: React.FC = () => {
     const handleTouchMove = (e: TouchEvent): void => {
       if (isOverLink(e)) return;
 
+      const element = document.elementFromPoint(
+        e.touches[0].clientX,
+        e.touches[0].clientY
+      );
+
+      if (element?.closest('select')) return;
+
       e.preventDefault();
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
@@ -163,6 +170,13 @@ const AsciiRipple: React.FC = () => {
         handleLinkClick(link);
         return;
       }
+
+      const element = document.elementFromPoint(
+        e.touches[0].clientX,
+        e.touches[0].clientY
+      );
+
+      if (element?.closest('select')) return;
 
       e.preventDefault();
       const touch = e.touches[0];

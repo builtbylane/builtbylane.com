@@ -26,11 +26,11 @@ const ExperimentChooser = ({
 }) => {
   return (
     <div className="fixed bottom-4 left-4 z-10">
-      <div className="relative inline-block">
+      <div className="relative inline-block min-w-0">
         <select
           value={currentExperiment}
           onChange={(e) => onExperimentChange(e.target.value as Experiment)}
-          className="appearance-none bg-transparent text-gray-300 pl-2 pr-8 py-1 text-sm cursor-pointer focus:outline-none hover:text-[#c6fdea] transition-colors duration-200"
+          className="appearance-none bg-transparent text-gray-300 pl-2 pr-7 py-1 text-sm cursor-pointer outline-none hover:text-[#c6fdea] transition-colors duration-200 min-w-0 max-w-max"
         >
           {Object.values(EXPERIMENTS).map((exp) => (
             <option key={exp} value={exp}>

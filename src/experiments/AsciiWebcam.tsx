@@ -21,7 +21,6 @@ const WebcamAscii: React.FC = () => {
   const asciiConfig = useMemo<AsciiConfig>(
     () => ({
       chars: [' ', '.', ':', '-', '~', '=', '+', '*', '#', '%', '@'],
-
       cellSize: 4,
       fontSize: 4,
       backgroundColor: 'black',
@@ -29,6 +28,18 @@ const WebcamAscii: React.FC = () => {
     }),
     []
   );
+
+  // Initialize canvas with background color
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = asciiConfig.backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  }, [asciiConfig.backgroundColor]);
 
   // Processes a single frame of video into ASCII art
   const processImageData = useCallback(
@@ -97,6 +108,12 @@ const WebcamAscii: React.FC = () => {
         if (canvas.width !== videoWidth || canvas.height !== videoHeight) {
           canvas.width = videoWidth;
           canvas.height = videoHeight;
+          // Maintain background color when canvas is resized
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = asciiConfig.backgroundColor;
+            ctx.fillRect(0, 0, videoWidth, videoHeight);
+          }
         }
 
         const ctx = canvas.getContext('2d');
@@ -133,7 +150,9 @@ const WebcamAscii: React.FC = () => {
       <Webcam
         ref={webcamRef}
         audio={false}
-        className="absolute inset-0 w-full h-full object-cover"
+        className={`absolute inset-0 w-full h-full object-cover ${
+          isVideoReady ? 'opacity-0' : 'invisible'
+        }`}
         onLoadedMetadata={() => setIsVideoReady(true)}
       />
       <canvas
