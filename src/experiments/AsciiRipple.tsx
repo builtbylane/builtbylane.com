@@ -1,4 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+'use client';
+
+import type React from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * Represents a single cell in the ASCII grid
@@ -40,6 +43,9 @@ const AsciiRipple: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ripplesRef = useRef<Ripple[]>([]);
   const lastMousePosRef = useRef({ x: 0, y: 0 });
+  const animationFrameRef = useRef<number | null>(null); // Track animation frame for cleanup
+  const gridRef = useRef<Grid | null>(null); // Persist grid between renders
+
   const letters: string[] =
     "asbcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>?/".split(
       ''
@@ -97,11 +103,7 @@ const AsciiRipple: React.FC = () => {
      * @param y - Y coordinate of the ripple
      * @param isClick - Whether this ripple was triggered by a click/tap (stronger effect)
      */
-    const createRipple = (
-      x: number,
-      y: number,
-      isClick: boolean = false
-    ): void => {
+    const createRipple = (x: number, y: number, isClick = false): void => {
       const dx = x - lastMousePosRef.current.x;
       const dy = y - lastMousePosRef.current.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
@@ -147,6 +149,13 @@ const AsciiRipple: React.FC = () => {
     const handleTouchMove = (e: TouchEvent): void => {
       if (isOverLink(e)) return;
 
+      const element = document.elementFromPoint(
+        e.touches[0].clientX,
+        e.touches[0].clientY
+      );
+
+      if (element?.closest('select')) return;
+
       e.preventDefault();
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
@@ -162,6 +171,13 @@ const AsciiRipple: React.FC = () => {
         return;
       }
 
+      const element = document.elementFromPoint(
+        e.touches[0].clientX,
+        e.touches[0].clientY
+      );
+
+      if (element?.closest('select')) return;
+
       e.preventDefault();
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
@@ -174,27 +190,25 @@ const AsciiRipple: React.FC = () => {
     const handleResize = (): void => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      grid = initializeGrid(canvas.width, canvas.height);
+      gridRef.current = initializeGrid(canvas.width, canvas.height);
     };
 
+    // Initial setup
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    let grid = initializeGrid(canvas.width, canvas.height);
-
-    window.addEventListener('resize', handleResize);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('click', handleClick);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchstart', handleTouchStart, {
-      passive: false,
-    });
+    if (!gridRef.current) {
+      gridRef.current = initializeGrid(canvas.width, canvas.height);
+    }
 
     const animate = (): void => {
+      if (!canvas || !ctx || !gridRef.current) return;
+
       // Clear canvas
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.font = `${fontSize}px courier`;
 
+      const grid = gridRef.current;
       const cols = grid.length;
       const rows = grid[0].length;
 
@@ -254,12 +268,33 @@ const AsciiRipple: React.FC = () => {
         }
       }
 
-      requestAnimationFrame(animate);
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
 
+    // Start animation
     animate();
 
+    // Add event listeners
+    window.addEventListener('resize', handleResize);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('click', handleClick);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchstart', handleTouchStart, {
+      passive: false,
+    });
+
+    // Cleanup function
     return () => {
+      // Cancel animation frame to stop the animation loop
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+
+      // Clear ripples array
+      ripplesRef.current = [];
+
+      // Remove all event listeners
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('click', handleClick);
