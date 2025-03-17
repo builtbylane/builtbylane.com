@@ -4,10 +4,12 @@ import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import AsciiRipple from './experiments/AsciiRipple';
 import AsciiWebcam from './experiments/AsciiWebcam';
+import AsciiMetaBalls from './experiments/AsciiMetaBalls';
 
 const EXPERIMENTS = {
   RIPPLE: 'waves',
   WEBCAM: 'ascii camera',
+  LIQUID: 'liquid',
 } as const;
 
 type Experiment = (typeof EXPERIMENTS)[keyof typeof EXPERIMENTS];
@@ -15,6 +17,7 @@ type Experiment = (typeof EXPERIMENTS)[keyof typeof EXPERIMENTS];
 const EXPERIMENT_COMPONENTS: Record<Experiment, React.ComponentType> = {
   [EXPERIMENTS.RIPPLE]: AsciiRipple,
   [EXPERIMENTS.WEBCAM]: AsciiWebcam,
+  [EXPERIMENTS.LIQUID]: AsciiMetaBalls,
 };
 
 const ExperimentChooser = ({
