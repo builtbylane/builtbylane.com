@@ -1,22 +1,32 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 export default function MetaballsExperiment() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Get container dimensions
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    // Update dimensions state
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight,
+        });
+      }
+    };
+
+    // Initial dimensions
+    updateDimensions();
 
     // Create ASCII canvas
     const asciiCanvas = document.createElement('canvas');
-    asciiCanvas.width = width;
-    asciiCanvas.height = height;
+    asciiCanvas.width = dimensions.width || window.innerWidth;
+    asciiCanvas.height = dimensions.height || window.innerHeight;
     const asciiCtx = asciiCanvas.getContext('2d');
     containerRef.current.appendChild(asciiCanvas);
 
@@ -32,16 +42,28 @@ export default function MetaballsExperiment() {
       alpha: true,
       preserveDrawingBuffer: true,
     });
-    renderer.setSize(width, height);
+    renderer.setSize(
+      dimensions.width || window.innerWidth,
+      dimensions.height || window.innerHeight
+    );
     renderer.setClearColor(0x000000, 0); // Transparent background
 
     // Create shader material for metaballs
     const metaballShader = {
       uniforms: {
         uTime: { value: 0 },
-        uResolution: { value: new THREE.Vector2(width, height) },
+        uResolution: {
+          value: new THREE.Vector2(
+            dimensions.width || window.innerWidth,
+            dimensions.height || window.innerHeight
+          ),
+        },
         uMouse: { value: new THREE.Vector2(0.5, 0.5) },
-        uAspect: { value: width / height },
+        uAspect: {
+          value:
+            (dimensions.width || window.innerWidth) /
+            (dimensions.height || window.innerHeight),
+        },
       },
       vertexShader: /* glsl */ `
         varying vec2 vUv;
@@ -80,15 +102,11 @@ export default function MetaballsExperiment() {
     vec2 center5 = vec2(centerX + 0.09 * sin(uTime * 0.61), centerY + 0.11 * sin(uTime * 0.53));
     vec2 center6 = vec2(centerX + 0.11 * cos(uTime * 0.33), centerY + 0.13 * cos(uTime * 0.49));
     vec2 center7 = vec2(centerX + 0.08 * sin(uTime * 0.45), centerY + 0.09 * sin(uTime * 0.55));
-    
-    // Add more metaballs with different movement patterns
     vec2 center8 = vec2(centerX + 0.13 * sin(uTime * 0.29), centerY + 0.12 * cos(uTime * 0.63));
     vec2 center9 = vec2(centerX + 0.07 * cos(uTime * 0.53), centerY + 0.15 * sin(uTime * 0.31));
     vec2 center10 = vec2(centerX + 0.14 * sin(uTime * 0.47), centerY + 0.08 * cos(uTime * 0.59));
     vec2 center11 = vec2(centerX + 0.06 * cos(uTime * 0.65), centerY + 0.11 * sin(uTime * 0.37));
     vec2 center12 = vec2(centerX + 0.1 * sin(uTime * 0.43), centerY + 0.13 * cos(uTime * 0.51));
-    
-    // Add 4 extra metaballs with different movement patterns
     vec2 center13 = vec2(centerX + 0.18 * sin(uTime * 0.27), centerY + 0.16 * cos(uTime * 0.35));
     vec2 center14 = vec2(centerX + 0.16 * cos(uTime * 0.38), centerY + 0.17 * sin(uTime * 0.42));
     vec2 center15 = vec2(centerX + 0.19 * sin(uTime * 0.31), centerY + 0.14 * cos(uTime * 0.48));
@@ -117,12 +135,12 @@ export default function MetaballsExperiment() {
     
     // Adjust threshold and smoothness for a more gradual fade
     float threshold = 1.4;
-    float smoothness = 1.2; // Increased smoothness for more gradual fade
+    float smoothness = 1.2;
     
-    // Create a more gradual fade with a wider smoothstep
+    // gradual fade with a wider smoothstep
     float metaballField = smoothstep(threshold - smoothness, threshold + 0.4, v);
     
-    // Apply a curve to create a more natural fade without hard edges
+    // a curve to create a more natural fade without hard edges
     metaballField = pow(metaballField, 1.2) * 0.8;
     
     // Output the brightness value directly - we'll convert to ASCII in JavaScript
@@ -194,26 +212,38 @@ export default function MetaballsExperiment() {
     const handleResize = () => {
       if (!containerRef.current) return;
 
-      const rect = containerRef.current.getBoundingClientRect();
-      const newWidth = rect.width;
-      const newHeight = rect.height;
+      // Update dimensions state which will trigger re-render
+      updateDimensions();
 
-      renderer.setSize(newWidth, newHeight);
-      metaballShader.uniforms.uResolution.value.set(newWidth, newHeight);
-      metaballShader.uniforms.uAspect.value = newWidth / newHeight;
+      const width = containerRef.current.clientWidth;
+      const height = containerRef.current.clientHeight;
+
+      // Update renderer
+      renderer.setSize(width, height);
+
+      // Update shader uniforms
+      metaballShader.uniforms.uResolution.value.set(width, height);
+      metaballShader.uniforms.uAspect.value = width / height;
 
       // Resize ASCII canvas
-      asciiCanvas.width = newWidth;
-      asciiCanvas.height = newHeight;
+      asciiCanvas.width = width;
+      asciiCanvas.height = height;
 
       // Reset font size based on new dimensions
       if (asciiCtx) {
-        const cellSize = Math.max(4, Math.floor(newWidth / 160)); // Adjust cell size based on width
+        const cellSize = Math.max(4, Math.floor(width / 160)); // Adjust cell size based on width
         asciiCtx.font = `${cellSize}px monospace`;
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    // Add resize event listener with debounce
+    let resizeTimeout: number;
+    const debouncedResize = () => {
+      window.clearTimeout(resizeTimeout);
+      resizeTimeout = window.setTimeout(handleResize, 100);
+    };
+
+    window.addEventListener('resize', debouncedResize);
 
     // Make sure initial size is correct
     handleResize();
@@ -223,7 +253,7 @@ export default function MetaballsExperiment() {
 
     // Set initial font size
     if (asciiCtx) {
-      const cellSize = Math.max(4, Math.floor(width / 160)); // Adjust cell size based on width
+      const cellSize = Math.max(4, Math.floor(dimensions.width / 160)); // Adjust cell size based on width
       asciiCtx.font = `${cellSize}px monospace`;
       asciiCtx.textBaseline = 'top';
     }
@@ -235,6 +265,10 @@ export default function MetaballsExperiment() {
     const animate = () => {
       const elapsedTime = (Date.now() - startTime) / 1000;
       metaballShader.uniforms.uTime.value = elapsedTime;
+
+      // Get current width and height for rendering
+      const width = containerRef.current?.clientWidth || window.innerWidth;
+      const height = containerRef.current?.clientHeight || window.innerHeight;
 
       // Render the metaball field to the WebGL renderer
       renderer.render(scene, camera);
@@ -290,7 +324,8 @@ export default function MetaballsExperiment() {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', debouncedResize);
+      window.clearTimeout(resizeTimeout);
       cancelAnimationFrame(animationFrameId);
       observer.disconnect();
 
@@ -307,7 +342,7 @@ export default function MetaballsExperiment() {
       geometry.dispose();
       material.dispose();
     };
-  }, []);
+  }, [dimensions.width, dimensions.height]);
 
   return (
     <div
