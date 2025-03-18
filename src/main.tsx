@@ -8,7 +8,7 @@ import AsciiMetaBalls from './experiments/AsciiMetaBalls';
 
 const EXPERIMENTS = {
   RIPPLE: 'waves',
-  WEBCAM: 'ascii camera',
+  WEBCAM: 'ascii cam',
   LIQUID: 'liquid',
 } as const;
 
@@ -18,6 +18,14 @@ const EXPERIMENT_COMPONENTS: Record<Experiment, React.ComponentType> = {
   [EXPERIMENTS.RIPPLE]: AsciiRipple,
   [EXPERIMENTS.WEBCAM]: AsciiWebcam,
   [EXPERIMENTS.LIQUID]: AsciiMetaBalls,
+};
+
+// Function to randomly select either waves or ripple
+const getRandomInitialExperiment = (): Experiment => {
+  // We only want to randomly choose between RIPPLE (waves) and LIQUID (liquid)
+  const options = [EXPERIMENTS.RIPPLE, EXPERIMENTS.LIQUID];
+  const randomIndex = Math.floor(Math.random() * options.length);
+  return options[randomIndex];
 };
 
 const ExperimentChooser = ({
@@ -68,7 +76,10 @@ const StyleInitializer = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  const [experiment, setExperiment] = useState<Experiment>(EXPERIMENTS.RIPPLE);
+  // Initialize with a random experiment between waves and ripple
+  const [experiment, setExperiment] = useState<Experiment>(
+    getRandomInitialExperiment()
+  );
 
   const ExperimentComponent = EXPERIMENT_COMPONENTS[experiment];
 
@@ -82,6 +93,7 @@ const App = () => {
     </>
   );
 };
+
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
