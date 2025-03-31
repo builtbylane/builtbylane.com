@@ -48,6 +48,9 @@ export default function MetaballsExperiment() {
     );
     renderer.setClearColor(0x000000, 0); // Transparent background
 
+    let isClicking = false;
+    let clickAnimation = 0.0; // Animation progress value between 0.0 and 1.0
+
     // Create shader material for metaballs
     const metaballShader = {
       uniforms: {
@@ -64,6 +67,7 @@ export default function MetaballsExperiment() {
             (dimensions.width || window.innerWidth) /
             (dimensions.height || window.innerHeight),
         },
+        uIsClicking: { value: 0.0 }, // 0.0 for not clicking, 1.0 for clicking
       },
       vertexShader: /* glsl */ `
         varying vec2 vUv;
@@ -78,6 +82,7 @@ export default function MetaballsExperiment() {
   uniform vec2 uResolution;
   uniform vec2 uMouse;
   uniform float uAspect;
+  uniform float uIsClicking;
   varying vec2 vUv;
   
   float metaball(vec2 p, vec2 center, float radius) {
@@ -95,6 +100,10 @@ export default function MetaballsExperiment() {
     float centerY = 0.5;
     
     // Make the first metaball follow the mouse position
+    // animate the radius when clicking using easeOutElastic effect
+    float elasticFactor = uIsClicking * (1.0 + 0.15 * sin(uIsClicking * 3.14159));
+    float mouseRadius = 0.035 + (elasticFactor * 0.008); // Normal 0.035, clicked ~0.043
+    
     vec2 center1 = uMouse;
     vec2 center2 = vec2(centerX + 0.12 * cos(uTime * 0.41), centerY + 0.12 * sin(uTime * 0.39));
     vec2 center3 = vec2(centerX + 0.08 * sin(uTime * 0.57), centerY + 0.14 * cos(uTime * 0.43));
@@ -114,7 +123,7 @@ export default function MetaballsExperiment() {
     
     // Calculate metaball field with smaller radii for more distinct balls
     float v = 0.0;
-    v += metaball(p, center1, 0.035); // Smaller radius for mouse-controlled metaball
+    v += metaball(p, center1, mouseRadius); // Use mouseRadius which changes based on click state
     v += metaball(p, center2, 0.02);
     v += metaball(p, center3, 0.018);
     v += metaball(p, center4, 0.02);
@@ -189,6 +198,23 @@ export default function MetaballsExperiment() {
       }
     };
 
+    // Handle mouse/touch press and release for the click effect
+    const handleMouseDown = () => {
+      isClicking = true;
+    };
+
+    const handleMouseUp = () => {
+      isClicking = false;
+    };
+
+    const handleTouchStart = () => {
+      isClicking = true;
+    };
+
+    const handleTouchEnd = () => {
+      isClicking = false;
+    };
+
     // Only add event listeners if container is visible in viewport
     const observer = new IntersectionObserver((entries) => {
       if (entries && entries.length > 0 && entries[0]?.isIntersecting) {
@@ -198,9 +224,17 @@ export default function MetaballsExperiment() {
         window.addEventListener('touchmove', handleTouchMove, {
           passive: false,
         });
+        window.addEventListener('mousedown', handleMouseDown);
+        window.addEventListener('mouseup', handleMouseUp);
+        window.addEventListener('touchstart', handleTouchStart);
+        window.addEventListener('touchend', handleTouchEnd);
       } else {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('mousedown', handleMouseDown);
+        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('touchend', handleTouchEnd);
       }
     });
 
@@ -266,6 +300,18 @@ export default function MetaballsExperiment() {
       const elapsedTime = (Date.now() - startTime) / 1000;
       metaballShader.uniforms.uTime.value = elapsedTime;
 
+      // Animate click effect with smooth transition
+      if (isClicking && clickAnimation < 1.0) {
+        // Expand animation
+        clickAnimation = Math.min(1.0, clickAnimation + 0.08); // Speed of expansion
+      } else if (!isClicking && clickAnimation > 0.0) {
+        // Contract animation
+        clickAnimation = Math.max(0.0, clickAnimation - 0.05); // Speed of contraction (slightly slower)
+      }
+
+      // Update the shader uniform with the animated value
+      metaballShader.uniforms.uIsClicking.value = clickAnimation;
+
       // Get current width and height for rendering
       const width = containerRef.current?.clientWidth || window.innerWidth;
       const height = containerRef.current?.clientHeight || window.innerHeight;
@@ -324,6 +370,10 @@ export default function MetaballsExperiment() {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('resize', debouncedResize);
       window.clearTimeout(resizeTimeout);
       cancelAnimationFrame(animationFrameId);
@@ -348,7 +398,7 @@ export default function MetaballsExperiment() {
     <div
       ref={containerRef}
       className="fixed inset-0 w-full h-screen bg-black touch-none cursor-pointer canvas-background"
-      aria-label="Interactive metaballs experiment with ASCII rendering"
+      aria-label="Interactive metaballs experiment with ASCII rendering. Click to make the ball following your mouse larger."
     />
   );
 }
