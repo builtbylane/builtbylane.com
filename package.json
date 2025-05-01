@@ -1,42 +1,47 @@
 {
-  "$schema": "https://json.schemastore.org/package",
-  "name": "builtbylane.com",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "engines": {
-    "node": ">=22.0.0",
-    "bun": ">=1.1.30",
-    "npm": "Only use Bun (https://bun.sh)",
-    "yarn": "Only use Bun (https://bun.sh)",
-    "pnpm": "Only use Bun (https://bun.sh)"
-  },
-  "scripts": {
-    "dev": "bunx --bun vite",
-    "build": "bunx tsc && bunx --bun vite build --minify  --outDir dist",
-    "clean": "rm -rf dist",
-    "lint": "bunx --bun eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "bunx --bun vite preview",
-    "s3:assets": "s3-deploy './dist/**/*!(*.html)' --cwd './dist/' --profile bbl --bucket builtbylane.com --gzip xml,html,htm,js,css,ttf,otf,svg,txt",
-    "s3:html": "s3-deploy './dist/**/*.html' --cwd './dist/' --profile bbl --bucket builtbylane.com --gzip html",
-    "deploy": "bun run clean && bun run build && bun run s3:assets && bun run s3:html"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-webcam": "^7.2.0",
-    "three": "^0.174.0"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@types/three": "^0.174.0",
-    "@vitejs/plugin-react-swc": "^3.8.0",
-    "autoprefixer": "^10.4.21",
-    "s3-deploy": "^1.4.0",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.2",
-    "vite": "^4.5.9"
-  }
+	"$schema": "https://json.schemastore.org/package",
+	"name": "builtbylane.com",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"engines": {
+		"node": ">=22.0.0",
+		"bun": ">=1.1.30",
+		"npm": "Only use Bun (https://bun.sh)",
+		"yarn": "Only use Bun (https://bun.sh)",
+		"pnpm": "Only use Bun (https://bun.sh)"
+	},
+	"scripts": {
+		"dev": "bunx --bun vite",
+		"build": "bunx tsc && bunx --bun vite build --minify  --outDir dist",
+		"clean": "rm -rf dist",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"preview": "bunx --bun vite preview",
+		"s3:assets": "s3-deploy './dist/**/*!(*.html)' --cwd './dist/' --profile bbl --bucket builtbylane.com --gzip xml,html,htm,js,css,ttf,otf,svg,txt",
+		"s3:html": "s3-deploy './dist/**/*.html' --cwd './dist/' --profile bbl --bucket builtbylane.com --gzip html",
+		"deploy": "bun run clean && bun run build && bun run s3:assets && bun run s3:html"
+	},
+	"dependencies": {
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"react-webcam": "^7.2.0",
+		"three": "^0.174.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@tailwindcss/vite": "^4.1.5",
+		"@types/react": "^18.3.18",
+		"@types/react-dom": "^18.3.3",
+		"@types/three": "^0.176.0",
+		"@vitejs/plugin-react-swc": "^3.9.0",
+		"s3-deploy": "^1.4.0",
+		"simple-git-hooks": "^2.13.0",
+		"tailwindcss": "^4.1.5",
+		"typescript": "^5.8.3",
+		"vite": "^6.3.4"
+	},
+	"simple-git-hooks": {
+		"pre-commit": "bun lint:fix"
+	}
 }

@@ -1,15 +1,15 @@
-import './index.css';
+import "./index.css";
 
-import { StrictMode, useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import AsciiMetaBalls from './experiments/AsciiMetaBalls';
-import AsciiRipple from './experiments/AsciiRipple';
-import AsciiWebcam from './experiments/AsciiWebcam';
+import { StrictMode, useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
+import AsciiMetaBalls from "./experiments/AsciiMetaBalls";
+import AsciiRipple from "./experiments/AsciiRipple";
+import AsciiWebcam from "./experiments/AsciiWebcam";
 
 const EXPERIMENTS = {
-	RIPPLE: 'waves',
-	WEBCAM: 'ascii cam',
-	LIQUID: 'liquid',
+	RIPPLE: "waves",
+	WEBCAM: "ascii cam",
+	LIQUID: "liquid",
 } as const;
 
 type Experiment = (typeof EXPERIMENTS)[keyof typeof EXPERIMENTS];
@@ -40,10 +40,10 @@ const ExperimentChooser = ({
 			<div className="relative inline-block min-w-0">
 				<select
 					value={currentExperiment}
-					onChange={e => onExperimentChange(e.target.value as Experiment)}
+					onChange={(e) => onExperimentChange(e.target.value as Experiment)}
 					className="appearance-none bg-transparent text-gray-300 pl-2 pr-7 py-1 text-sm cursor-pointer outline-none hover:text-[#c6fdea] transition-colors duration-200 min-w-0 max-w-max"
 				>
-					{Object.values(EXPERIMENTS).map(exp => (
+					{Object.values(EXPERIMENTS).map((exp) => (
 						<option key={exp} value={exp}>
 							{exp}
 						</option>
@@ -68,8 +68,8 @@ const ExperimentChooser = ({
 
 const StyleInitializer = ({ children }: { children: React.ReactNode }) => {
 	useEffect(() => {
-		document.documentElement.classList.remove('loading');
-		document.documentElement.classList.add('loaded');
+		document.documentElement.classList.remove("loading");
+		document.documentElement.classList.add("loaded");
 	}, []);
 
 	return <>{children}</>;
@@ -77,20 +77,25 @@ const StyleInitializer = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
 	// Initialize with a random experiment between waves and ripple
-	const [experiment, setExperiment] = useState<Experiment>(getRandomInitialExperiment());
+	const [experiment, setExperiment] = useState<Experiment>(
+		getRandomInitialExperiment(),
+	);
 
 	const ExperimentComponent = EXPERIMENT_COMPONENTS[experiment];
 
 	return (
 		<>
 			<ExperimentComponent />
-			<ExperimentChooser currentExperiment={experiment} onExperimentChange={setExperiment} />
+			<ExperimentChooser
+				currentExperiment={experiment}
+				onExperimentChange={setExperiment}
+			/>
 		</>
 	);
 };
 
-const rootElement = document.getElementById('root');
-if (!rootElement) throw new Error('Failed to find the root element');
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Failed to find the root element");
 
 createRoot(rootElement).render(
 	<StrictMode>
@@ -101,26 +106,26 @@ createRoot(rootElement).render(
 );
 
 const ascii = [
-	'           ______________    ',
-	'          /             /|   ',
-	'        /____________ /  |   ',
-	'       | ___________ |   |   ',
-	'       ||   here    ||   |   ',
-	'       ||    be     ||   |   ',
-	'       ||  dragons  ||   |   ',
-	'       ||___________||   |   ',
-	'       |   _______   |  /    ',
-	'      /|  (_______)  | /     ',
-	'     ( |_____________|/      ',
-	'      \\                      ',
-	'  .=======================.  ',
-	'  | ::::::::::::::::  ::: |  ',
-	'  | ::::::::::::::[]  ::: |  ',
-	'  |   -----------     ::: |  ',
+	"           ______________    ",
+	"          /             /|   ",
+	"        /____________ /  |   ",
+	"       | ___________ |   |   ",
+	"       ||   here    ||   |   ",
+	"       ||    be     ||   |   ",
+	"       ||  dragons  ||   |   ",
+	"       ||___________||   |   ",
+	"       |   _______   |  /    ",
+	"      /|  (_______)  | /     ",
+	"     ( |_____________|/      ",
+	"      \\                      ",
+	"  .=======================.  ",
+	"  | ::::::::::::::::  ::: |  ",
+	"  | ::::::::::::::[]  ::: |  ",
+	"  |   -----------     ::: |  ",
 	"  `-----------------------'  ",
 ];
 
 console.log(
-	`%c${ascii.join('\n')}`,
+	`%c${ascii.join("\n")}`,
 	"font-family: 'Courier New', monospace; letter-spacing: -1px;",
 );
