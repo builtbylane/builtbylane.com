@@ -1,75 +1,75 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
+import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
 
 export default function MetaballsExperiment() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-  useEffect(() => {
-    if (!containerRef.current) return;
+	useEffect(() => {
+		if (!containerRef.current) return;
 
-    // Update dimensions state
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight,
-        });
-      }
-    };
+		// Update dimensions state
+		const updateDimensions = () => {
+			if (containerRef.current) {
+				setDimensions({
+					width: containerRef.current.clientWidth,
+					height: containerRef.current.clientHeight,
+				});
+			}
+		};
 
-    // Initial dimensions
-    updateDimensions();
+		// Initial dimensions
+		updateDimensions();
 
-    // Create ASCII canvas
-    const asciiCanvas = document.createElement('canvas');
-    asciiCanvas.width = dimensions.width || window.innerWidth;
-    asciiCanvas.height = dimensions.height || window.innerHeight;
-    const asciiCtx = asciiCanvas.getContext('2d');
-    containerRef.current.appendChild(asciiCanvas);
+		// Create ASCII canvas
+		const asciiCanvas = document.createElement("canvas");
+		asciiCanvas.width = dimensions.width || window.innerWidth;
+		asciiCanvas.height = dimensions.height || window.innerHeight;
+		const asciiCtx = asciiCanvas.getContext("2d");
+		containerRef.current.appendChild(asciiCanvas);
 
-    // Scene setup
-    const scene = new THREE.Scene();
+		// Scene setup
+		const scene = new THREE.Scene();
 
-    // Use orthographic camera to cover the entire viewport without perspective distortion
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
-    camera.position.z = 1;
+		// Use orthographic camera to cover the entire viewport without perspective distortion
+		const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+		camera.position.z = 1;
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      preserveDrawingBuffer: true,
-    });
-    renderer.setSize(
-      dimensions.width || window.innerWidth,
-      dimensions.height || window.innerHeight
-    );
-    renderer.setClearColor(0x000000, 0); // Transparent background
+		const renderer = new THREE.WebGLRenderer({
+			antialias: true,
+			alpha: true,
+			preserveDrawingBuffer: true,
+		});
+		renderer.setSize(
+			dimensions.width || window.innerWidth,
+			dimensions.height || window.innerHeight,
+		);
+		renderer.setClearColor(0x000000, 0); // Transparent background
 
-    let isClicking = false;
-    let clickAnimation = 0.0; // Animation progress value between 0.0 and 1.0
+		let isClicking = false;
+		let clickAnimation = 0.0; // Animation progress value between 0.0 and 1.0
 
-    // Create shader material for metaballs
-    const metaballShader = {
-      uniforms: {
-        uTime: { value: 0 },
-        uResolution: {
-          value: new THREE.Vector2(
-            dimensions.width || window.innerWidth,
-            dimensions.height || window.innerHeight
-          ),
-        },
-        uMouse: { value: new THREE.Vector2(0.5, 0.5) },
-        uAspect: {
-          value:
-            (dimensions.width || window.innerWidth) /
-            (dimensions.height || window.innerHeight),
-        },
-        uIsClicking: { value: 0.0 }, // 0.0 for not clicking, 1.0 for clicking
-      },
-      vertexShader: /* glsl */ `
+		// Create shader material for metaballs
+		const metaballShader = {
+			uniforms: {
+				uTime: { value: 0 },
+				uResolution: {
+					value: new THREE.Vector2(
+						dimensions.width || window.innerWidth,
+						dimensions.height || window.innerHeight,
+					),
+				},
+				uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+				uAspect: {
+					value:
+						(dimensions.width || window.innerWidth) /
+						(dimensions.height || window.innerHeight),
+				},
+				uIsClicking: { value: 0.0 }, // 0.0 for not clicking, 1.0 for clicking
+			},
+			vertexShader: /* glsl */ `
         varying vec2 vUv;
         
         void main() {
@@ -77,7 +77,7 @@ export default function MetaballsExperiment() {
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
-      fragmentShader: /* glsl */ `
+			fragmentShader: /* glsl */ `
   uniform float uTime;
   uniform vec2 uResolution;
   uniform vec2 uMouse;
@@ -156,249 +156,249 @@ export default function MetaballsExperiment() {
     gl_FragColor = vec4(vec3(metaballField), 1.0);
   }
 `,
-    };
+		};
 
-    // Create a plane that covers the entire viewport
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    const material = new THREE.ShaderMaterial({
-      uniforms: metaballShader.uniforms,
-      vertexShader: metaballShader.vertexShader,
-      fragmentShader: metaballShader.fragmentShader,
-    });
+		// Create a plane that covers the entire viewport
+		const geometry = new THREE.PlaneGeometry(2, 2);
+		const material = new THREE.ShaderMaterial({
+			uniforms: metaballShader.uniforms,
+			vertexShader: metaballShader.vertexShader,
+			fragmentShader: metaballShader.fragmentShader,
+		});
 
-    const plane = new THREE.Mesh(geometry, material);
-    scene.add(plane);
+		const plane = new THREE.Mesh(geometry, material);
+		scene.add(plane);
 
-    // Handle mouse/touch movement
-    const updatePointerPosition = (clientX: number, clientY: number) => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
+		// Handle mouse/touch movement
+		const updatePointerPosition = (clientX: number, clientY: number) => {
+			const rect = containerRef.current?.getBoundingClientRect();
+			if (!rect) return;
 
-      const x = (clientX - rect.left) / rect.width;
-      const y = 1 - (clientY - rect.top) / rect.height;
+			const x = (clientX - rect.left) / rect.width;
+			const y = 1 - (clientY - rect.top) / rect.height;
 
-      // Only update if pointer is within container
-      if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
-        metaballShader.uniforms.uMouse.value.x = x;
-        metaballShader.uniforms.uMouse.value.y = y;
-      }
-    };
+			// Only update if pointer is within container
+			if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
+				metaballShader.uniforms.uMouse.value.x = x;
+				metaballShader.uniforms.uMouse.value.y = y;
+			}
+		};
 
-    const handleMouseMove = (event: MouseEvent) => {
-      updatePointerPosition(event.clientX, event.clientY);
-    };
+		const handleMouseMove = (event: MouseEvent) => {
+			updatePointerPosition(event.clientX, event.clientY);
+		};
 
-    const handleTouchMove = (event: TouchEvent) => {
-      if (event.touches.length > 0) {
-        event.preventDefault(); // Prevent scrolling while dragging
-        updatePointerPosition(
-          event.touches[0].clientX,
-          event.touches[0].clientY
-        );
-      }
-    };
+		const handleTouchMove = (event: TouchEvent) => {
+			if (event.touches.length > 0) {
+				event.preventDefault(); // Prevent scrolling while dragging
+				updatePointerPosition(
+					event.touches[0].clientX,
+					event.touches[0].clientY,
+				);
+			}
+		};
 
-    // Handle mouse/touch press and release for the click effect
-    const handleMouseDown = () => {
-      isClicking = true;
-    };
+		// Handle mouse/touch press and release for the click effect
+		const handleMouseDown = () => {
+			isClicking = true;
+		};
 
-    const handleMouseUp = () => {
-      isClicking = false;
-    };
+		const handleMouseUp = () => {
+			isClicking = false;
+		};
 
-    const handleTouchStart = () => {
-      isClicking = true;
-    };
+		const handleTouchStart = () => {
+			isClicking = true;
+		};
 
-    const handleTouchEnd = () => {
-      isClicking = false;
-    };
+		const handleTouchEnd = () => {
+			isClicking = false;
+		};
 
-    // Only add event listeners if container is visible in viewport
-    const observer = new IntersectionObserver((entries) => {
-      if (entries && entries.length > 0 && entries[0]?.isIntersecting) {
-        window.addEventListener('mousemove', handleMouseMove, {
-          passive: true,
-        });
-        window.addEventListener('touchmove', handleTouchMove, {
-          passive: false,
-        });
-        window.addEventListener('mousedown', handleMouseDown);
-        window.addEventListener('mouseup', handleMouseUp);
-        window.addEventListener('touchstart', handleTouchStart);
-        window.addEventListener('touchend', handleTouchEnd);
-      } else {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('touchmove', handleTouchMove);
-        window.removeEventListener('mousedown', handleMouseDown);
-        window.removeEventListener('mouseup', handleMouseUp);
-        window.removeEventListener('touchstart', handleTouchStart);
-        window.removeEventListener('touchend', handleTouchEnd);
-      }
-    });
+		// Only add event listeners if container is visible in viewport
+		const observer = new IntersectionObserver((entries) => {
+			if (entries && entries.length > 0 && entries[0]?.isIntersecting) {
+				window.addEventListener("mousemove", handleMouseMove, {
+					passive: true,
+				});
+				window.addEventListener("touchmove", handleTouchMove, {
+					passive: false,
+				});
+				window.addEventListener("mousedown", handleMouseDown);
+				window.addEventListener("mouseup", handleMouseUp);
+				window.addEventListener("touchstart", handleTouchStart);
+				window.addEventListener("touchend", handleTouchEnd);
+			} else {
+				window.removeEventListener("mousemove", handleMouseMove);
+				window.removeEventListener("touchmove", handleTouchMove);
+				window.removeEventListener("mousedown", handleMouseDown);
+				window.removeEventListener("mouseup", handleMouseUp);
+				window.removeEventListener("touchstart", handleTouchStart);
+				window.removeEventListener("touchend", handleTouchEnd);
+			}
+		});
 
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
+		if (containerRef.current) {
+			observer.observe(containerRef.current);
+		}
 
-    // Handle window resize
-    const handleResize = () => {
-      if (!containerRef.current) return;
+		// Handle window resize
+		const handleResize = () => {
+			if (!containerRef.current) return;
 
-      // Update dimensions state which will trigger re-render
-      updateDimensions();
+			// Update dimensions state which will trigger re-render
+			updateDimensions();
 
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
+			const width = containerRef.current.clientWidth;
+			const height = containerRef.current.clientHeight;
 
-      // Update renderer
-      renderer.setSize(width, height);
+			// Update renderer
+			renderer.setSize(width, height);
 
-      // Update shader uniforms
-      metaballShader.uniforms.uResolution.value.set(width, height);
-      metaballShader.uniforms.uAspect.value = width / height;
+			// Update shader uniforms
+			metaballShader.uniforms.uResolution.value.set(width, height);
+			metaballShader.uniforms.uAspect.value = width / height;
 
-      // Resize ASCII canvas
-      asciiCanvas.width = width;
-      asciiCanvas.height = height;
+			// Resize ASCII canvas
+			asciiCanvas.width = width;
+			asciiCanvas.height = height;
 
-      // Reset font size based on new dimensions
-      if (asciiCtx) {
-        const cellSize = Math.max(4, Math.floor(width / 160)); // Adjust cell size based on width
-        asciiCtx.font = `${cellSize}px monospace`;
-      }
-    };
+			// Reset font size based on new dimensions
+			if (asciiCtx) {
+				const cellSize = Math.max(4, Math.floor(width / 160)); // Adjust cell size based on width
+				asciiCtx.font = `${cellSize}px monospace`;
+			}
+		};
 
-    // Add resize event listener with debounce
-    let resizeTimeout: number;
-    const debouncedResize = () => {
-      window.clearTimeout(resizeTimeout);
-      resizeTimeout = window.setTimeout(handleResize, 100);
-    };
+		// Add resize event listener with debounce
+		let resizeTimeout: number;
+		const debouncedResize = () => {
+			window.clearTimeout(resizeTimeout);
+			resizeTimeout = window.setTimeout(handleResize, 100);
+		};
 
-    window.addEventListener('resize', debouncedResize);
+		window.addEventListener("resize", debouncedResize);
 
-    // Make sure initial size is correct
-    handleResize();
+		// Make sure initial size is correct
+		handleResize();
 
-    // Define ASCII characters from darkest to brightest (simplified set)
-    const asciiChars = ' .:-=+*#%@';
+		// Define ASCII characters from darkest to brightest (simplified set)
+		const asciiChars = " .:-=+*#%@";
 
-    // Set initial font size
-    if (asciiCtx) {
-      const cellSize = Math.max(4, Math.floor(dimensions.width / 160)); // Adjust cell size based on width
-      asciiCtx.font = `${cellSize}px monospace`;
-      asciiCtx.textBaseline = 'top';
-    }
+		// Set initial font size
+		if (asciiCtx) {
+			const cellSize = Math.max(4, Math.floor(dimensions.width / 160)); // Adjust cell size based on width
+			asciiCtx.font = `${cellSize}px monospace`;
+			asciiCtx.textBaseline = "top";
+		}
 
-    // Animation loop
-    const startTime = Date.now();
-    let animationFrameId: number;
+		// Animation loop
+		const startTime = Date.now();
+		let animationFrameId: number;
 
-    const animate = () => {
-      const elapsedTime = (Date.now() - startTime) / 1000;
-      metaballShader.uniforms.uTime.value = elapsedTime;
+		const animate = () => {
+			const elapsedTime = (Date.now() - startTime) / 1000;
+			metaballShader.uniforms.uTime.value = elapsedTime;
 
-      // Animate click effect with smooth transition
-      if (isClicking && clickAnimation < 1.0) {
-        // Expand animation
-        clickAnimation = Math.min(1.0, clickAnimation + 0.08); // Speed of expansion
-      } else if (!isClicking && clickAnimation > 0.0) {
-        // Contract animation
-        clickAnimation = Math.max(0.0, clickAnimation - 0.05); // Speed of contraction (slightly slower)
-      }
+			// Animate click effect with smooth transition
+			if (isClicking && clickAnimation < 1.0) {
+				// Expand animation
+				clickAnimation = Math.min(1.0, clickAnimation + 0.08); // Speed of expansion
+			} else if (!isClicking && clickAnimation > 0.0) {
+				// Contract animation
+				clickAnimation = Math.max(0.0, clickAnimation - 0.05); // Speed of contraction (slightly slower)
+			}
 
-      // Update the shader uniform with the animated value
-      metaballShader.uniforms.uIsClicking.value = clickAnimation;
+			// Update the shader uniform with the animated value
+			metaballShader.uniforms.uIsClicking.value = clickAnimation;
 
-      // Get current width and height for rendering
-      const width = containerRef.current?.clientWidth || window.innerWidth;
-      const height = containerRef.current?.clientHeight || window.innerHeight;
+			// Get current width and height for rendering
+			const width = containerRef.current?.clientWidth || window.innerWidth;
+			const height = containerRef.current?.clientHeight || window.innerHeight;
 
-      // Render the metaball field to the WebGL renderer
-      renderer.render(scene, camera);
+			// Render the metaball field to the WebGL renderer
+			renderer.render(scene, camera);
 
-      // Get the pixel data from the renderer
-      const gl = renderer.getContext();
-      const pixels = new Uint8Array(width * height * 4);
-      gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+			// Get the pixel data from the renderer
+			const gl = renderer.getContext();
+			const pixels = new Uint8Array(width * height * 4);
+			gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
-      // Clear the ASCII canvas
-      if (asciiCtx) {
-        asciiCtx.clearRect(0, 0, width, height);
-        asciiCtx.fillStyle = 'black';
-        asciiCtx.fillRect(0, 0, width, height);
-        asciiCtx.fillStyle = 'white';
+			// Clear the ASCII canvas
+			if (asciiCtx) {
+				asciiCtx.clearRect(0, 0, width, height);
+				asciiCtx.fillStyle = "black";
+				asciiCtx.fillRect(0, 0, width, height);
+				asciiCtx.fillStyle = "white";
 
-        // Calculate cell size based on canvas width
-        const cellSize = Math.max(4, Math.floor(width / 160));
-        const cols = Math.floor(width / cellSize);
-        const rows = Math.floor(height / cellSize);
+				// Calculate cell size based on canvas width
+				const cellSize = Math.max(4, Math.floor(width / 160));
+				const cols = Math.floor(width / cellSize);
+				const rows = Math.floor(height / cellSize);
 
-        // Draw ASCII characters based on brightness
-        for (let y = 0; y < rows; y++) {
-          for (let x = 0; x < cols; x++) {
-            // Sample the pixel at this position
-            // Note: WebGL has (0,0) at bottom-left, canvas at top-left
-            const pixelX = Math.floor(x * cellSize);
-            const pixelY = height - Math.floor(y * cellSize) - 1;
-            const pixelIndex = (pixelY * width + pixelX) * 4;
+				// Draw ASCII characters based on brightness
+				for (let y = 0; y < rows; y++) {
+					for (let x = 0; x < cols; x++) {
+						// Sample the pixel at this position
+						// Note: WebGL has (0,0) at bottom-left, canvas at top-left
+						const pixelX = Math.floor(x * cellSize);
+						const pixelY = height - Math.floor(y * cellSize) - 1;
+						const pixelIndex = (pixelY * width + pixelX) * 4;
 
-            // Get brightness from red channel (all channels are the same in our grayscale output)
-            const brightness = pixels[pixelIndex] / 255;
+						// Get brightness from red channel (all channels are the same in our grayscale output)
+						const brightness = pixels[pixelIndex] / 255;
 
-            // Skip drawing if brightness is very low
-            if (brightness < 0.05) continue;
+						// Skip drawing if brightness is very low
+						if (brightness < 0.05) continue;
 
-            // Map brightness to ASCII character
-            const charIndex = Math.floor(brightness * (asciiChars.length - 1));
-            const char = asciiChars[charIndex];
+						// Map brightness to ASCII character
+						const charIndex = Math.floor(brightness * (asciiChars.length - 1));
+						const char = asciiChars[charIndex];
 
-            // Draw the character
-            asciiCtx.fillText(char, x * cellSize, y * cellSize);
-          }
-        }
-      }
+						// Draw the character
+						asciiCtx.fillText(char, x * cellSize, y * cellSize);
+					}
+				}
+			}
 
-      animationFrameId = requestAnimationFrame(animate);
-    };
+			animationFrameId = requestAnimationFrame(animate);
+		};
 
-    animate();
+		animate();
 
-    // Cleanup
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('resize', debouncedResize);
-      window.clearTimeout(resizeTimeout);
-      cancelAnimationFrame(animationFrameId);
-      observer.disconnect();
+		// Cleanup
+		return () => {
+			window.removeEventListener("mousemove", handleMouseMove);
+			window.removeEventListener("touchmove", handleTouchMove);
+			window.removeEventListener("mousedown", handleMouseDown);
+			window.removeEventListener("mouseup", handleMouseUp);
+			window.removeEventListener("touchstart", handleTouchStart);
+			window.removeEventListener("touchend", handleTouchEnd);
+			window.removeEventListener("resize", debouncedResize);
+			window.clearTimeout(resizeTimeout);
+			cancelAnimationFrame(animationFrameId);
+			observer.disconnect();
 
-      if (containerRef.current) {
-        try {
-          if (asciiCanvas.parentNode === containerRef.current) {
-            containerRef.current.removeChild(asciiCanvas);
-          }
-        } catch (e) {
-          console.error('Error removing canvas:', e);
-        }
-      }
+			if (containerRef.current) {
+				try {
+					if (asciiCanvas.parentNode === containerRef.current) {
+						containerRef.current.removeChild(asciiCanvas);
+					}
+				} catch (e) {
+					console.error("Error removing canvas:", e);
+				}
+			}
 
-      geometry.dispose();
-      material.dispose();
-    };
-  }, [dimensions.width, dimensions.height]);
+			geometry.dispose();
+			material.dispose();
+		};
+	}, [dimensions.width, dimensions.height]);
 
-  return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 w-full h-screen bg-black touch-none cursor-pointer canvas-background"
-      aria-label="Interactive metaballs experiment with ASCII rendering. Click to make the ball following your mouse larger."
-    />
-  );
+	return (
+		<div
+			ref={containerRef}
+			className="fixed inset-0 w-full h-screen bg-black touch-none cursor-pointer canvas-background"
+			aria-label="Interactive metaballs experiment with ASCII rendering. Click to make the ball following your mouse larger."
+		/>
+	);
 }
