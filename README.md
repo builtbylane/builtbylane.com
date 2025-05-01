@@ -1,71 +1,48 @@
 # builtbylane.com
 
-Personal website for Lane Goldberg, Founder/CTO @ All Gold, built with React, TypeScript, and Tailwind CSS.
+Personal website for Lane Goldberg, Founder/CTO of All Gold.
 
 ## Tech Stack
 
-- [React 18](https://react.dev)
+- [React](https://react.dev)
 - [TypeScript](https://www.typescriptlang.org/)
+- [Three.js](https://threejs.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Vite](https://vitejs.dev/)
-- [Bun](https://bun.sh/) as the JavaScript runtime and package manager
-- [Biome](https://biomejs.dev/) for linting, formatting and organizing imports
-
-## Prerequisites
-
-This project requires:
-
-- [Bun](https://bun.sh/) >= 1.1.30
-- Node.js >= 22.0.0
-
-This project explicitly uses Bun as the package manager. npm, yarn, and pnpm are not supported. 
+- [Biome](https://biomejs.dev/)
+- [pnpm](https://pnpm.io/)
 
 ## Development
 
 ```bash
 # Install dependencies
-bun install
+pnpm install
 
 # Start development server
-bun run dev
+pnpm run dev
 
 # Build for production
-bun run build
+pnpm run build
 
-# Preview production build
-bun run preview
-
-# Lint and format code (using Biome)
-bun run lint
+# Lint and format code
+pnpm run lint
 ```
 
 ## Deployment
 
-The site deploys AWS S3. If it were to get more traffic I would put it behind a CDN, but for now it's fine (it's less than $20 a year) Deployment process:
-
-```bash
-bun run deploy
-```
-
-This command will:
-
-1. Clean the dist directory
-2. Build the project
-3. Deploy assets to S3 with gzip compression
-4. Deploy HTML files to S3 with gzip compression
+Hosted on [Cloudflare Pages](https://pages.cloudflare.com/) (free tier). Deployment happens automatically when pushing to the main branch.
 
 ## Project Structure
 
 - `/src` - Source code
   - `main.tsx` - Application entry point
-  - `AsciiRipple` - Main visual component
-- `index.html` - HTML entry point
-- Various configuration files for TypeScript, Tailwind, PostCSS, Vite, and Biome (`biome.json`)
+  - `/experiments` - ASCII art experiments
+    - `AsciiMetaBalls.tsx` - Interactive metaballs simulation
+    - `AsciiRipple.tsx` - Ripple effect with mouse interaction
+    - `AsciiWebcam.tsx` - Webcam feed converted to ASCII
 
-## License
+## License & Contributing
 
-Please contact Lane Goldberg for licensing information.
+This is a personal website. Please contact Lane Goldberg for licensing information.
 
-## Contributing
-
-This is a personal website, but if you notice any issues, please feel free to open an issue or submit a pull request on GitHub.
+If you notice any issues, feel free to open an issue or PR on GitHub.
