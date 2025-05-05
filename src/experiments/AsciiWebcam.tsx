@@ -17,7 +17,7 @@ const WebcamAscii: React.FC = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [isVideoReady, setIsVideoReady] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
-	const animationFrameRef = useRef<number>();
+	const animationFrameRef = useRef<number | null>(null);
 
 	useEffect(() => {
 		const checkMobile = () => {
@@ -45,7 +45,7 @@ const WebcamAscii: React.FC = () => {
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (canvas) {
-			const ctx = canvas.getContext("2d");
+			const ctx = canvas.getContext("2d", { willReadFrequently: true });
 			if (ctx) {
 				ctx.fillStyle = asciiConfig.backgroundColor;
 				ctx.fillRect(0, 0, canvas.width, canvas.height);

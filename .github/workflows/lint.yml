@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Lint
+    name: Lint and Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,4 +27,7 @@ jobs:
         
       - name: Run lint
         run: pnpm lint
+        
+      - name: Run type check
+        run: pnpm type-check
         
