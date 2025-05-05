@@ -32,15 +32,6 @@ pnpm run lint
 
 Hosted on [Cloudflare Pages](https://pages.cloudflare.com/) (free tier). Deployment happens automatically when pushing to the main branch.
 
-## Project Structure
-
-- `/src` - Source code
-  - `main.tsx` - Application entry point
-  - `/experiments` - ASCII art experiments
-    - `AsciiMetaBalls.tsx` - Interactive metaballs simulation
-    - `AsciiRipple.tsx` - Ripple effect with mouse interaction
-    - `AsciiWebcam.tsx` - Webcam feed converted to ASCII
-
 ## License & Contributing
 
 This is a personal website. Please contact Lane Goldberg for licensing information.
