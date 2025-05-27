@@ -30,6 +30,48 @@ body {
 	}
 }
 
+@keyframes flash {
+	0% {
+		opacity: 0;
+	}
+	50% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+@keyframes barnDoorLeft {
+	0% {
+		transform: translateX(-100%);
+	}
+	45% {
+		transform: translateX(0);
+	}
+	55% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-100%);
+	}
+}
+
+@keyframes barnDoorRight {
+	0% {
+		transform: translateX(100%);
+	}
+	45% {
+		transform: translateX(0);
+	}
+	55% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(100%);
+	}
+}
+
 ::selection {
 	background-color: rgba(255, 255, 255, 0.2);
 	color: #ffffff;
@@ -46,4 +88,16 @@ main {
 .canvas-background {
 	opacity: 0;
 	animation: fadeIn 0.5s ease-in 0.2s forwards;
+}
+
+.animate-flash {
+	animation: flash 0.3s ease-out;
+}
+
+.animate-barn-door-left {
+	animation: barnDoorLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-barn-door-right {
+	animation: barnDoorRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
