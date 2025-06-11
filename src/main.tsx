@@ -20,10 +20,25 @@ const EXPERIMENT_COMPONENTS: Record<Experiment, React.ComponentType> = {
 	[EXPERIMENTS.LIQUID]: AsciiMetaBalls,
 };
 
-// Function to randomly select either waves or ripple
-const getRandomInitialExperiment = (): Experiment => {
-	// We only want to randomly choose between RIPPLE (waves) and LIQUID (liquid)
-	const options = [EXPERIMENTS.RIPPLE, EXPERIMENTS.LIQUID];
+const EXPERIMENT_QUERY_PARAMS: Record<string, Experiment> = {
+	waves: EXPERIMENTS.RIPPLE,
+	camera: EXPERIMENTS.WEBCAM,
+	cam: EXPERIMENTS.WEBCAM,
+	liquid: EXPERIMENTS.LIQUID,
+};
+
+const getInitialExperiment = (): Experiment => {
+	const params = new URLSearchParams(window.location.search);
+	const experimentParam = params.get("e");
+
+	if (experimentParam) {
+		const experiment = EXPERIMENT_QUERY_PARAMS[experimentParam.toLowerCase()];
+		if (experiment) {
+			return experiment;
+		}
+	}
+
+	const options = [EXPERIMENTS.LIQUID, EXPERIMENTS.RIPPLE];
 	const randomIndex = Math.floor(Math.random() * options.length);
 	return options[randomIndex];
 };
@@ -76,10 +91,24 @@ const StyleInitializer = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-	// Initialize with a random experiment between waves and ripple
+	// Initialize with experiment from URL or random
 	const [experiment, setExperiment] = useState<Experiment>(
-		getRandomInitialExperiment(),
+		getInitialExperiment(),
 	);
+
+	// Update URL when experiment changes
+	const handleExperimentChange = (newExperiment: Experiment) => {
+		setExperiment(newExperiment);
+		// Find the first query param key for this experiment
+		const queryParam = Object.entries(EXPERIMENT_QUERY_PARAMS).find(
+			([_, exp]) => exp === newExperiment,
+		)?.[0];
+		if (queryParam) {
+			const url = new URL(window.location.href);
+			url.searchParams.set("e", queryParam);
+			window.history.replaceState({}, "", url);
+		}
+	};
 
 	const ExperimentComponent = EXPERIMENT_COMPONENTS[experiment];
 
@@ -88,7 +117,7 @@ const App = () => {
 			<ExperimentComponent />
 			<ExperimentChooser
 				currentExperiment={experiment}
-				onExperimentChange={setExperiment}
+				onExperimentChange={handleExperimentChange}
 			/>
 		</>
 	);
