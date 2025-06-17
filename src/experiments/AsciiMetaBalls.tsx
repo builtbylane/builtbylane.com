@@ -285,6 +285,7 @@ export default function MetaballsExperiment() {
 		<div
 			ref={containerRef}
 			className="fixed inset-0 w-full h-screen bg-black touch-none cursor-pointer canvas-background"
+			role="img"
 			aria-label="Interactive metaballs experiment with ASCII rendering"
 		/>
 	);

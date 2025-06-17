@@ -218,7 +218,7 @@ const WebcamAscii: React.FC = () => {
 						await navigator.share({
 							files: [file],
 						});
-					} catch (err) {
+					} catch (_err) {
 						// User cancelled sharing - do nothing
 						console.log("Share cancelled");
 					}
