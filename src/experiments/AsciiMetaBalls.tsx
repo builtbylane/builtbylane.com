@@ -43,6 +43,9 @@ export default function MetaballsExperiment() {
 				uIsClicking: { value: 0 },
 				uIsClicking2: { value: 0 },
 				uHasSecondPointer: { value: 0 },
+				uTouchFade: { value: 0 },
+				uTouchFade2: { value: 0 },
+				uIsTouch: { value: 0 },
 			},
 			vertexShader: /* glsl */ `
 				varying vec2 vUv;
@@ -59,6 +62,9 @@ export default function MetaballsExperiment() {
 				uniform float uIsClicking;
 				uniform float uIsClicking2;
 				uniform float uHasSecondPointer;
+				uniform float uTouchFade;
+				uniform float uTouchFade2;
+				uniform float uIsTouch;
 				varying vec2 vUv;
 				
 				float metaball(vec2 p, vec2 center, float radius) {
@@ -73,10 +79,12 @@ export default function MetaballsExperiment() {
 					float centerY = 0.5;
 					
 					float elasticFactor = uIsClicking * (1.0 + 0.15 * sin(uIsClicking * 3.14159));
-					float mouseRadius = 0.035 + (elasticFactor * 0.008);
+					float baseSizeFactor = mix(1.0, uTouchFade, uIsTouch);
+					float mouseRadius = baseSizeFactor * (0.035 + (elasticFactor * 0.008));
 					
 					float elasticFactor2 = uIsClicking2 * (1.0 + 0.15 * sin(uIsClicking2 * 3.14159));
-					float mouseRadius2 = 0.035 + (elasticFactor2 * 0.008);
+					float baseSizeFactor2 = mix(1.0, uTouchFade2, uIsTouch);
+					float mouseRadius2 = baseSizeFactor2 * (0.035 + (elasticFactor2 * 0.008));
 					
 					vec2 center1 = uMouse;
 					vec2 center1b = uMouse2;
@@ -125,9 +133,15 @@ export default function MetaballsExperiment() {
 		let isClicking2 = false;
 		let clickAnimation = 0;
 		let clickAnimation2 = 0;
+		let touchFade = 0;
+		let touchFade2 = 0;
 		let rafId: number | null = null;
 		const startTime = Date.now();
-		const activeTouches = new Map<number, { x: number; y: number }>();
+		const activeTouches = new Map<
+			number,
+			{ x: number; y: number; fadeIn: number }
+		>();
+		let isTouch = false;
 
 		// Event handlers
 		function handleMouseMove(e: MouseEvent) {
@@ -156,13 +170,17 @@ export default function MetaballsExperiment() {
 			const rect = container.getBoundingClientRect();
 
 			// Update all active touches
-			activeTouches.clear();
 			for (let i = 0; i < e.touches.length; i++) {
 				const touch = e.touches[i];
 				const x = (touch.clientX - rect.left) / rect.width;
 				const y = 1 - (touch.clientY - rect.top) / rect.height;
 				if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
-					activeTouches.set(touch.identifier, { x, y });
+					const existing = activeTouches.get(touch.identifier);
+					activeTouches.set(touch.identifier, {
+						x,
+						y,
+						fadeIn: existing ? existing.fadeIn : 0,
+					});
 				}
 			}
 
@@ -192,13 +210,15 @@ export default function MetaballsExperiment() {
 				const x = (touch.clientX - rect.left) / rect.width;
 				const y = 1 - (touch.clientY - rect.top) / rect.height;
 				if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
-					activeTouches.set(touch.identifier, { x, y });
+					activeTouches.set(touch.identifier, { x, y, fadeIn: 0 });
 				}
 			}
 
 			// Update clicking states
 			if (activeTouches.size >= 1) {
 				isClicking = true;
+				isTouch = true;
+				shader.uniforms.uIsTouch.value = 1;
 			}
 			if (activeTouches.size >= 2) {
 				isClicking2 = true;
@@ -293,6 +313,27 @@ export default function MetaballsExperiment() {
 				clickAnimation2 = Math.max(0.0, clickAnimation2 - 0.05);
 			}
 			shader.uniforms.uIsClicking2.value = clickAnimation2;
+
+			// Update touch fade animations
+			if (isTouch) {
+				const touchArray = Array.from(activeTouches.values());
+
+				// Update fade for first touch
+				if (touchArray.length > 0 && touchFade < 1.0) {
+					touchFade = Math.min(1.0, touchFade + 0.24);
+				} else if (touchArray.length === 0 && touchFade > 0.0) {
+					touchFade = Math.max(0.0, touchFade - 0.16);
+				}
+				shader.uniforms.uTouchFade.value = touchFade;
+
+				// Update fade for second touch
+				if (touchArray.length > 1 && touchFade2 < 1.0) {
+					touchFade2 = Math.min(1.0, touchFade2 + 0.24);
+				} else if (touchArray.length <= 1 && touchFade2 > 0.0) {
+					touchFade2 = Math.max(0.0, touchFade2 - 0.16);
+				}
+				shader.uniforms.uTouchFade2.value = touchFade2;
+			}
 
 			// Get dimensions
 			const width = canvas.width;
