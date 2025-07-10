@@ -38,7 +38,7 @@ const getInitialExperiment = (): Experiment => {
 		}
 	}
 
-	const options = [EXPERIMENTS.LIQUID, EXPERIMENTS.RIPPLE];
+	const options = [EXPERIMENTS.LIQUID];
 	const randomIndex = Math.floor(Math.random() * options.length);
 	return options[randomIndex];
 };
