@@ -38,8 +38,11 @@ export default function MetaballsExperiment() {
 			uniforms: {
 				uTime: { value: 0 },
 				uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+				uMouse2: { value: new THREE.Vector2(0.5, 0.5) },
 				uAspect: { value: window.innerWidth / window.innerHeight },
 				uIsClicking: { value: 0 },
+				uIsClicking2: { value: 0 },
+				uHasSecondPointer: { value: 0 },
 			},
 			vertexShader: /* glsl */ `
 				varying vec2 vUv;
@@ -51,8 +54,11 @@ export default function MetaballsExperiment() {
 			fragmentShader: /* glsl */ `
 				uniform float uTime;
 				uniform vec2 uMouse;
+				uniform vec2 uMouse2;
 				uniform float uAspect;
 				uniform float uIsClicking;
+				uniform float uIsClicking2;
+				uniform float uHasSecondPointer;
 				varying vec2 vUv;
 				
 				float metaball(vec2 p, vec2 center, float radius) {
@@ -69,7 +75,11 @@ export default function MetaballsExperiment() {
 					float elasticFactor = uIsClicking * (1.0 + 0.15 * sin(uIsClicking * 3.14159));
 					float mouseRadius = 0.035 + (elasticFactor * 0.008);
 					
+					float elasticFactor2 = uIsClicking2 * (1.0 + 0.15 * sin(uIsClicking2 * 3.14159));
+					float mouseRadius2 = 0.035 + (elasticFactor2 * 0.008);
+					
 					vec2 center1 = uMouse;
+					vec2 center1b = uMouse2;
 					vec2 center2 = vec2(centerX + 0.12 * cos(uTime * 0.41), centerY + 0.12 * sin(uTime * 0.39));
 					vec2 center3 = vec2(centerX + 0.08 * sin(uTime * 0.57), centerY + 0.14 * cos(uTime * 0.43));
 					vec2 center4 = vec2(centerX + 0.15 * cos(uTime * 0.37), centerY + 0.07 * sin(uTime * 0.51));
@@ -80,6 +90,7 @@ export default function MetaballsExperiment() {
 					
 					float v = 0.0;
 					v += metaball(p, center1, mouseRadius);
+					v += metaball(p, center1b, mouseRadius2) * uHasSecondPointer;
 					v += metaball(p, center2, 0.045); 
 					v += metaball(p, center3, 0.036); 
 					v += metaball(p, center4, 0.045); 
@@ -111,9 +122,12 @@ export default function MetaballsExperiment() {
 
 		// State variables
 		let isClicking = false;
+		let isClicking2 = false;
 		let clickAnimation = 0;
+		let clickAnimation2 = 0;
 		let rafId: number | null = null;
 		const startTime = Date.now();
+		const activeTouches = new Map<number, { x: number; y: number }>();
 
 		// Event handlers
 		function handleMouseMove(e: MouseEvent) {
@@ -137,34 +151,100 @@ export default function MetaballsExperiment() {
 		}
 
 		function handleTouchMove(e: TouchEvent) {
-			if (e.touches.length > 0) {
-				e.preventDefault();
-				if (!container) return;
-				const rect = container.getBoundingClientRect();
-				const x = (e.touches[0].clientX - rect.left) / rect.width;
-				const y = 1 - (e.touches[0].clientY - rect.top) / rect.height;
+			e.preventDefault();
+			if (!container) return;
+			const rect = container.getBoundingClientRect();
 
+			// Update all active touches
+			activeTouches.clear();
+			for (let i = 0; i < e.touches.length; i++) {
+				const touch = e.touches[i];
+				const x = (touch.clientX - rect.left) / rect.width;
+				const y = 1 - (touch.clientY - rect.top) / rect.height;
 				if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
-					shader.uniforms.uMouse.value.x = x;
-					shader.uniforms.uMouse.value.y = y;
+					activeTouches.set(touch.identifier, { x, y });
 				}
+			}
+
+			// Update shader uniforms based on active touches
+			const touchArray = Array.from(activeTouches.values());
+			if (touchArray.length > 0) {
+				shader.uniforms.uMouse.value.x = touchArray[0].x;
+				shader.uniforms.uMouse.value.y = touchArray[0].y;
+			}
+			if (touchArray.length > 1) {
+				shader.uniforms.uMouse2.value.x = touchArray[1].x;
+				shader.uniforms.uMouse2.value.y = touchArray[1].y;
+				shader.uniforms.uHasSecondPointer.value = 1;
+			} else {
+				shader.uniforms.uHasSecondPointer.value = 0;
 			}
 		}
 
-		function handleTouchStart() {
-			isClicking = true;
+		function handleTouchStart(e: TouchEvent) {
+			e.preventDefault();
+			if (!container) return;
+			const rect = container.getBoundingClientRect();
+
+			// Add new touches to the map
+			for (let i = 0; i < e.changedTouches.length; i++) {
+				const touch = e.changedTouches[i];
+				const x = (touch.clientX - rect.left) / rect.width;
+				const y = 1 - (touch.clientY - rect.top) / rect.height;
+				if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
+					activeTouches.set(touch.identifier, { x, y });
+				}
+			}
+
+			// Update clicking states
+			if (activeTouches.size >= 1) {
+				isClicking = true;
+			}
+			if (activeTouches.size >= 2) {
+				isClicking2 = true;
+			}
+
+			// Update shader uniforms
+			const touchArray = Array.from(activeTouches.values());
+			if (touchArray.length > 0) {
+				shader.uniforms.uMouse.value.x = touchArray[0].x;
+				shader.uniforms.uMouse.value.y = touchArray[0].y;
+			}
+			if (touchArray.length > 1) {
+				shader.uniforms.uMouse2.value.x = touchArray[1].x;
+				shader.uniforms.uMouse2.value.y = touchArray[1].y;
+				shader.uniforms.uHasSecondPointer.value = 1;
+			}
 		}
 
-		function handleTouchEnd() {
-			isClicking = false;
+		function handleTouchEnd(e: TouchEvent) {
+			e.preventDefault();
+
+			// Remove ended touches from the map
+			for (let i = 0; i < e.changedTouches.length; i++) {
+				activeTouches.delete(e.changedTouches[i].identifier);
+			}
+
+			// Update clicking states
+			if (activeTouches.size === 0) {
+				isClicking = false;
+				isClicking2 = false;
+			} else if (activeTouches.size === 1) {
+				isClicking2 = false;
+			}
+
+			// Update shader uniforms
+			if (activeTouches.size < 2) {
+				shader.uniforms.uHasSecondPointer.value = 0;
+			}
 		}
 
 		window.addEventListener("mousemove", handleMouseMove);
 		window.addEventListener("mousedown", handleMouseDown);
 		window.addEventListener("mouseup", handleMouseUp);
 		window.addEventListener("touchmove", handleTouchMove, { passive: false });
-		window.addEventListener("touchstart", handleTouchStart);
-		window.addEventListener("touchend", handleTouchEnd);
+		window.addEventListener("touchstart", handleTouchStart, { passive: false });
+		window.addEventListener("touchend", handleTouchEnd, { passive: false });
 
 		// Handle window resize
 		function handleResize() {
@@ -199,13 +279,20 @@ export default function MetaballsExperiment() {
 			const elapsedTime = (Date.now() - startTime) / 1000;
 			shader.uniforms.uTime.value = elapsedTime;
 
-			// Update click animation
+			// Update click animations
 			if (isClicking && clickAnimation < 1.0) {
 				clickAnimation = Math.min(1.0, clickAnimation + 0.08);
 			} else if (!isClicking && clickAnimation > 0.0) {
 				clickAnimation = Math.max(0.0, clickAnimation - 0.05);
 			}
 			shader.uniforms.uIsClicking.value = clickAnimation;
+
+			if (isClicking2 && clickAnimation2 < 1.0) {
+				clickAnimation2 = Math.min(1.0, clickAnimation2 + 0.08);
+			} else if (!isClicking2 && clickAnimation2 > 0.0) {
+				clickAnimation2 = Math.max(0.0, clickAnimation2 - 0.05);
+			}
+			shader.uniforms.uIsClicking2.value = clickAnimation2;
 
 			// Get dimensions
 			const width = canvas.width;
