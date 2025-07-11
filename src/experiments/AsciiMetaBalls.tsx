@@ -165,7 +165,6 @@ export default function MetaballsExperiment() {
 		}
 
 		function handleTouchMove(e: TouchEvent) {
-			e.preventDefault();
 			if (!container) return;
 			const rect = container.getBoundingClientRect();
 
@@ -200,7 +199,6 @@ export default function MetaballsExperiment() {
 		}
 
 		function handleTouchStart(e: TouchEvent) {
-			e.preventDefault();
 			if (!container) return;
 			const rect = container.getBoundingClientRect();
 
@@ -238,8 +236,6 @@ export default function MetaballsExperiment() {
 		}
 
 		function handleTouchEnd(e: TouchEvent) {
-			e.preventDefault();
-
 			// Remove ended touches from the map
 			for (let i = 0; i < e.changedTouches.length; i++) {
 				activeTouches.delete(e.changedTouches[i].identifier);
