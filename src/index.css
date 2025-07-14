@@ -88,6 +88,18 @@ main {
 .canvas-background {
 	opacity: 0;
 	animation: fadeIn 0.5s ease-in 0.2s forwards;
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+
+.canvas-background canvas {
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-touch-callout: none;
 }
 
 .animate-flash {
